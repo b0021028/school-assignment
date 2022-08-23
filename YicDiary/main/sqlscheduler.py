@@ -262,22 +262,22 @@ else:
             if self.__checklogin(logincode):
                 with self.connection() as connect:
                     with connect.cursor() as cursor:
-                        befordate = (year, month, 1)
-                        afterdate = (year + 1, 1, 1) if month == 12 else (year, month + 1, 1)
+                        befordate = f"{year}-{month}-01"
+                        afterdate = f"{year+1}-01-01" if month == 12 else f"{year}-{month+1}-01"
                         # ユーザーズ取得
                         sql = f"SELECT USERID FROM FRIENDLY AS F1 WHERE EXISTS (SELECT * FROM FRIENDLY F2 WHERE F2.USERID = '{self.__getuserid()}' AND F1.USERID <> F2.USERID AND F1.FAMILYID = F2.FAMILYID)"
                         cursor.execute(sql)
 
                         #仲間の予定が入っている日付の取得
-                        sql = "SELECT CALENDARDATE FROM SCHEDULE WHERE USERID IN ('" + "','".join(map(lambda x:x["USERID"], cursor.fetchall())) + "') GROUP BY CALENDARDATE HAVING CALENDARDATE BETWEEN " + f"'{befordate[0]}-{befordate[1]}-{befordate[2]}' AND '{afterdate[0]}-{afterdate[1]}-{afterdate[2]}'"
+                        sql = "SELECT CALENDARDATE FROM SCHEDULE WHERE USERID IN ('" + "','".join(map(lambda x:x["USERID"], cursor.fetchall())) + "') GROUP BY CALENDARDATE HAVING " + f"CALENDARDATE >= '{befordate}' AND CALENDARDATE < '{afterdate}'"
                         cursor.execute(sql)
                         multiuser = cursor.fetchall()
 
                         #自身の予定が入っている日付の取得
-                        sql = f"SELECT CALENDARDATE FROM SCHEDULE WHERE USERID = '{self.__getuserid()}' GROUP BY CALENDARDATE HAVING CALENDARDATE BETWEEN " + f"'{befordate[0]}-{befordate[1]}-{befordate[2]}' AND '{afterdate[0]}-{afterdate[1]}-{afterdate[2]}'"
+                        sql = f"SELECT CALENDARDATE FROM SCHEDULE WHERE USERID = '{self.__getuserid()}' GROUP BY CALENDARDATE HAVING " + f"CALENDARDATE >= '{befordate}' AND CALENDARDATE < '{afterdate}'"
                         cursor.execute(sql)
                         dates = cursor.fetchall()
-                        
+
                         if dates != ():
                             #print(type(dates[0]))
                             dates = tuple(map(lambda x:  x['CALENDARDATE'].day, dates))
